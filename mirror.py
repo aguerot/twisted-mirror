@@ -18,7 +18,7 @@ class MirrorClient(object):
         """ Init the MirrorClient with an associated device to listen.
         """
         self.device = open(device, 'rb')
-        self.clients = set()
+        self.subscribers = set()
 
     def start(self):
         """ When the start method is called, the listen method is called inside
@@ -26,11 +26,11 @@ class MirrorClient(object):
         """
         reactor.callInThread(self.listen)
 
-    def add_callback(self, callback):
+    def subscribe(self, callback):
         """ Add a callback which will be called when an event is read from the
         defined device.
         """
-        self.clients.add(callback)
+        self.subscribers.add(callback)
 
     def listen(self):
         """ Listen until the reactor is stopped and read the device. When a tag
@@ -48,5 +48,5 @@ class MirrorClient(object):
     def data_received(self, tag, state):
         """ Call all registered callbacks.
         """
-        for client in self.clients:
-            client(tag, state)
+        for subscriber in self.subscribers:
+            subscriber(tag, state)

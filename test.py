@@ -16,6 +16,6 @@ def on_mirror(tag, state):
 if __name__ == '__main__':
     # pylint: disable=C0103
     mirror = MirrorClient('/dev/mirror')
-    mirror.add_callback(on_mirror)
+    mirror.subscribe(on_mirror)
     reactor.callWhenRunning(mirror.start)
     reactor.run()
