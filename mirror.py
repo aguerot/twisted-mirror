@@ -35,6 +35,8 @@ class MirrorClient(object):
         self._subscribers.add(callback)
 
     def _open(self):
+        """ Open the device if it's possible (connected)
+        """
         try:
             self._device = open(self._device_name, 'rb')
         except IOError:
