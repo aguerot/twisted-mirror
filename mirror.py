@@ -17,8 +17,15 @@ class MirrorClient(object):
     def __init__(self, device):
         """ Init the MirrorClient with an associated device to listen.
         """
-        self.device = open(device, 'rb')
+        self.device_name = device
         self.subscribers = set()
+        self._open()
+
+    def _open(self):
+        try:
+            self.device = open(self.device_name, 'rb')
+        except IOError:
+            self.device = None
 
     def start(self):
         """ When the start method is called, the listen method is called inside
@@ -37,13 +44,19 @@ class MirrorClient(object):
         is detected or removed call registered callbacks.
         """
         while reactor.running:
-            data = self.device.read(16)
-            if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
-                tag = binascii.hexlify(data)[4:]
-                # Sometime a ghost tag is detected by the Mirror device.
-                if tag != '0000000000000000000000000000':
-                    state = True if data[0:2] == '\x02\x01' else False
-                    reactor.callFromThread(self.data_received, tag, state)
+            if not self.device or self.device.closed is True:
+                self._open()
+            else:
+                try:
+                    data = self.device.read(16)
+                    if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
+                        tag = binascii.hexlify(data)[4:]
+                        # Sometime a ghost tag is detected by the Mirror device.
+                        if tag != '0000000000000000000000000000':
+                            state = True if data[0:2] == '\x02\x01' else False
+                            reactor.callFromThread(self.data_received, tag, state)
+                except IOError:
+                    self.device.close()
 
     def data_received(self, tag, state):
         """ Call all registered callbacks.
