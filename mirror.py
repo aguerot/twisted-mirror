@@ -22,12 +22,6 @@ class MirrorClient(object):
         self._subscribers = set()
         self._open()
 
-    def _open(self):
-        try:
-            self._device = open(self._device_name, 'rb')
-        except IOError:
-            self._device = None
-
     def start(self):
         """ When the start method is called, the listen method is called inside
         a thread.
@@ -39,6 +33,12 @@ class MirrorClient(object):
         defined device.
         """
         self._subscribers.add(callback)
+
+    def _open(self):
+        try:
+            self._device = open(self._device_name, 'rb')
+        except IOError:
+            self._device = None
 
     def _listen(self):
         """ Listen until the reactor is stopped and read the device. When a tag
