@@ -43,7 +43,7 @@ class MirrorClient(object):
                 # Sometime a ghost tag is detected by the Mirror device.
                 if tag != '0000000000000000000000000000':
                     state = True if data[0:2] == '\x02\x01' else False
-                    self.data_received(tag, state)
+                    reactor.callFromThread(self.data_received, tag, state)
 
     def data_received(self, tag, state):
         """ Call all registered callbacks.
