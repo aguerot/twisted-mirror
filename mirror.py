@@ -8,10 +8,11 @@ found in the following article http://www.dad3zero.net/201012/mirror-en-python/
 import binascii
 from twisted.internet import reactor
 
+
 class MirrorClient(object):
     """ The MirrorClient listen to a device (eg: /dev/mirror) and call the
-    registered callbacks (from add_callback method) with the tag and associtated
-    state of the tag.
+    registered callbacks (from add_callback method) with the tag and
+    associtated state of the tag.
     """
     def __init__(self, device):
         """ Init the MirrorClient with an associated device to listen.
@@ -37,7 +38,7 @@ class MirrorClient(object):
         """
         while reactor.running:
             data = self.device.read(16)
-            if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00': # pylint: disable=C0301
+            if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
                 tag = binascii.hexlify(data)[4:]
                 # Sometime a ghost tag is detected by the Mirror device.
                 if tag != '0000000000000000000000000000':
