@@ -18,6 +18,7 @@ class MirrorClient(object):
     def __init__(self, device):
         """ Init the MirrorClient with an associated device to listen.
         """
+        self._device = None
         self._device_name = device
         self._subscribers = set()
         self._open()
@@ -50,17 +51,22 @@ class MirrorClient(object):
             if not self._device or self._device.closed is True:
                 self._device_disconnected()
             else:
-                try:
-                    data = self._device.read(16)
-                    if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
-                        bin_state = binascii.hexlify(data)[:4]
-                        tag = binascii.hexlify(data)[4:]
-                        # Sometime a ghost tag is detected by the Mirror device.
-                        if bin_state != '0104':
-                            state = True if bin_state == '0201' else False
-                            reactor.callFromThread(self._data_received, tag, state)
-                except IOError:
-                    self._device.close()
+                self._read_device()
+
+    def _read_device(self):
+        """ Read 16bytes from the device and search for a tag event.
+        """
+        data = self._device.read(16)
+        try:
+            if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
+                bin_state = binascii.hexlify(data)[:4]
+                tag = binascii.hexlify(data)[4:]
+                # Sometime a ghost tag is detected by the Mirror device.
+                if bin_state != '0104':
+                    state = True if bin_state == '0201' else False
+                    reactor.callFromThread(self._data_received, tag, state)
+        except IOError:
+            self._device.close()
 
     def _device_disconnected(self):
         """ When the mirror is disconnected from the computer wait 500ms
