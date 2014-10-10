@@ -6,6 +6,7 @@ found in the following article http://www.dad3zero.net/201012/mirror-en-python/
 
 
 import binascii
+from time import sleep
 from twisted.internet import reactor
 
 
@@ -45,7 +46,7 @@ class MirrorClient(object):
         """
         while reactor.running:
             if not self.device or self.device.closed is True:
-                self._open()
+                self.device_disconnected()
             else:
                 try:
                     data = self.device.read(16)
@@ -58,6 +59,13 @@ class MirrorClient(object):
                             reactor.callFromThread(self.data_received, tag, state)
                 except IOError:
                     self.device.close()
+
+    def device_disconnected(self):
+        """ When the mirror is disconnected from the computer wait 500ms
+        and try to reopen the device.
+        """
+        sleep(0.5)
+        self._open()
 
     def data_received(self, tag, state):
         """ Call all registered callbacks.
