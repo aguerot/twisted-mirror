@@ -18,57 +18,57 @@ class MirrorClient(object):
     def __init__(self, device):
         """ Init the MirrorClient with an associated device to listen.
         """
-        self.device_name = device
-        self.subscribers = set()
+        self._device_name = device
+        self._subscribers = set()
         self._open()
 
     def _open(self):
         try:
-            self.device = open(self.device_name, 'rb')
+            self._device = open(self._device_name, 'rb')
         except IOError:
-            self.device = None
+            self._device = None
 
     def start(self):
         """ When the start method is called, the listen method is called inside
         a thread.
         """
-        reactor.callInThread(self.listen)
+        reactor.callInThread(self._listen)
 
     def subscribe(self, callback):
         """ Add a callback which will be called when an event is read from the
         defined device.
         """
-        self.subscribers.add(callback)
+        self._subscribers.add(callback)
 
-    def listen(self):
+    def _listen(self):
         """ Listen until the reactor is stopped and read the device. When a tag
         is detected or removed call registered callbacks.
         """
         while reactor.running:
-            if not self.device or self.device.closed is True:
-                self.device_disconnected()
+            if not self._device or self._device.closed is True:
+                self._device_disconnected()
             else:
                 try:
-                    data = self.device.read(16)
+                    data = self._device.read(16)
                     if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
                         bin_state = binascii.hexlify(data)[:4]
                         tag = binascii.hexlify(data)[4:]
                         # Sometime a ghost tag is detected by the Mirror device.
                         if bin_state != '0104':
                             state = True if bin_state == '0201' else False
-                            reactor.callFromThread(self.data_received, tag, state)
+                            reactor.callFromThread(self._data_received, tag, state)
                 except IOError:
-                    self.device.close()
+                    self._device.close()
 
-    def device_disconnected(self):
+    def _device_disconnected(self):
         """ When the mirror is disconnected from the computer wait 500ms
         and try to reopen the device.
         """
         sleep(0.5)
         self._open()
 
-    def data_received(self, tag, state):
+    def _data_received(self, tag, state):
         """ Call all registered callbacks.
         """
-        for subscriber in self.subscribers:
+        for subscriber in self._subscribers:
             subscriber(tag, state)
