@@ -50,10 +50,11 @@ class MirrorClient(object):
                 try:
                     data = self.device.read(16)
                     if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
+                        bin_state = binascii.hexlify(data)[:4]
                         tag = binascii.hexlify(data)[4:]
                         # Sometime a ghost tag is detected by the Mirror device.
-                        if tag != '0000000000000000000000000000':
-                            state = True if data[0:2] == '\x02\x01' else False
+                        if bin_state != '0104':
+                            state = True if bin_state == '0201' else False
                             reactor.callFromThread(self.data_received, tag, state)
                 except IOError:
                     self.device.close()
