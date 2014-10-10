@@ -56,8 +56,8 @@ class MirrorClient(object):
     def _read_device(self):
         """ Read 16bytes from the device and search for a tag event.
         """
-        data = self._device.read(16)
         try:
+            data = self._device.read(16)
             if data != '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00':  # pylint: disable=C0301
                 bin_state = binascii.hexlify(data)[:4]
                 tag = binascii.hexlify(data)[4:]
